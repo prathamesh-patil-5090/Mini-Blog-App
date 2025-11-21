@@ -25,31 +25,31 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    # Add login field directly instead of modifying in __init__
-    login = serializers.CharField(help_text='Enter your username or email address')
+    # Add username_or_email field directly instead of modifying in __init__
+    username_or_email = serializers.CharField(help_text='Enter your username or email address')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Remove the username field since we're using login
+        # Remove the username field since we're using username_or_email
         if 'username' in self.fields:
             del self.fields['username']
 
     def validate(self, attrs):
-        login = attrs.get('login')
+        username_or_email = attrs.get('username_or_email')
         password = attrs.get('password')
 
-        if not login or not password:
-            raise serializers.ValidationError('Both login and password are required.')
+        if not username_or_email or not password:
+            raise serializers.ValidationError('Both username_or_email and password are required.')
 
-        # Determine if login is email or username
-        if '@' in login:
+        # Determine if username_or_email is email or username
+        if '@' in username_or_email:
             try:
-                user = User.objects.get(email=login)
+                user = User.objects.get(email=username_or_email)
                 username = user.username
             except User.DoesNotExist:
                 raise serializers.ValidationError('Invalid email or password.')
         else:
-            username = login
+            username = username_or_email
 
         # Authenticate with username and password
         user = authenticate(username=username, password=password)
@@ -63,7 +63,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Update attrs with actual username for parent validation
         attrs['username'] = username
-        attrs.pop('login') 
+        attrs.pop('username_or_email') 
 
         data = super().validate(attrs)
         

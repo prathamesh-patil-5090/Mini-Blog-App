@@ -11,7 +11,7 @@ class AuthenticationTestCase(TestCase):
     def setUp(self):
         self.username = "testuser1"
         self.email = "testuser1@test.com"
-        self.login = self.username or self.email
+        self.username_or_email = self.username or self.email
         self.password = "testPass@1"
         self.user = User.objects.create_user(
             username=self.username,
@@ -41,7 +41,7 @@ class AuthenticationTestCase(TestCase):
 
     def  test_login_view_returns_token(self):
         data={
-            "login" : self.login,
+            "username_or_email" : self.username_or_email,
             "password": self.password
         }
         request = self.factory.post('/login/', data, format='json')
