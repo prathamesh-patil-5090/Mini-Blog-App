@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Author {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String    @unique
+  user      String    @unique
+  createdAt DateTime  @default(now())
+  posts     Post[]    @relation("AuthorPosts")
+  comments  Comment[] @relation("AuthorComments")
+  likes     Like[]    @relation("AuthorLikes")
+}
+
+model Post {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  authorId    String    @db.ObjectId
+  author      Author    @relation("AuthorPosts", fields: [authorId], references: [id])
+  title       String
+  content     String
+  slug        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isPublished Boolean   @default(false)
+  status      Status    @default(DRAFT)
+  comments    Comment[] @relation("PostComments")
+  likes       Like[]    @relation("PostLikes")
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation("PostComments", fields: [postId], references: [id])
+  authorId  String   @db.ObjectId
+  author    Author   @relation("AuthorComments", fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Like {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation("PostLikes", fields: [postId], references: [id])
+  authorId  String   @db.ObjectId
+  author    Author   @relation("AuthorLikes", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlacklistedTokens {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  refreshToken String   @unique
+  listedAt     DateTime @default(now())
+}
+
+model SuspiciousActivity {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?
+  ip        String
+  reason    String
+  token     String?
+  createdAt DateTime @default(now())
+}
