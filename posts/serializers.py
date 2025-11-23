@@ -37,15 +37,16 @@ class PostSerializer(serializers.ModelSerializer):
         ]
 
         read_only_fields = [
-        "id",
-        "author",
-        "created_at",
-        "updated_at",
-        "slug"
-        "view_count",
-        "like_count",
-        "comment_count",
-        "reading_time"]
+            "id",
+            "author",
+            "created_at",
+            "updated_at",
+            "slug",
+            "view_count",
+            "like_count",
+            "comment_count",
+            "reading_time",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
