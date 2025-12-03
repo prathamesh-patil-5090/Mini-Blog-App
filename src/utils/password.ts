@@ -1,20 +1,19 @@
 import bcrypt from "bcrypt"
 import env from "../../env"
 
-export const hashPassword = async (
-  password: string,
-): Promise<string | undefined> => {
+export const hashPassword = async (password: string): Promise<string> => {
   const { isValid, errors } = validatePassword(password)
-  if (isValid) {
-    try {
-      return await bcrypt.hash(password, env.BCRYPT_ROUNDS)
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        throw new Error(String(err))
-      }
-    }
-  } else {
+  if (!isValid) {
     throw new Error(errors.join("; "))
+  }
+
+  try {
+    return await bcrypt.hash(password, env.BCRYPT_ROUNDS)
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error(String(err))
   }
 }
 
@@ -32,7 +31,7 @@ export const comparePassword = async (
   return bcrypt.compare(password, hashedPassword)
 }
 
-const validatePassword = (
+export const validatePassword = (
   password: string,
 ): { isValid: boolean; errors: string[] } => {
   password = (password ?? "").trim()
