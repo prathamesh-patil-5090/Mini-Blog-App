@@ -110,8 +110,6 @@ export const RegisterUser = async (
       throw new Error("Failed to create user")
     }
 
-    // Create token family for this login session
-    const tokenFamilyId = await createTokenFamily(newUser.id)
 
     // Create token payload
     const tokenPayload: JwtPayload = {

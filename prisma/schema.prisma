@@ -38,7 +38,7 @@ model Post {
   status      Status    @default(DRAFT)
   comments    Comment[] @relation("PostComments")
   likes       Like[]    @relation("PostLikes")
-}
+  }
 
 model Comment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
