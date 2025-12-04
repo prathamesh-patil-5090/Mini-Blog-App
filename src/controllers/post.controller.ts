@@ -21,6 +21,8 @@ const postSchema = z.object({
   status: z.enum(Status),
 })
 
+const updateSchema = postSchema.partial()
+
 const normalizeSlug = (raw: string): string =>
   raw
     .toString()
@@ -54,7 +56,7 @@ export const CreatePost = async (
     const trimmedSlug = normalizeSlug(slug)
     const existingSlug = await prisma.post.findUnique({
       where: {
-        slug: user.username + "/" + trimmedSlug,
+        slug: user.username + "-" + trimmedSlug,
       },
     })
     if (existingSlug) {
@@ -67,7 +69,7 @@ export const CreatePost = async (
         authorId: user.id,
         title: title,
         content: content,
-        slug: user.username + "/" + trimmedSlug,
+        slug: user.username + "-" + trimmedSlug,
         isPublished: isPublished,
         status: status,
       },
@@ -106,6 +108,10 @@ export const GetPosts = async (
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
+      include: {
+        likes: true,
+        comments: true
+      }
     })
     const totalPages = Math.ceil(totalPosts / limit)
     return res.status(200).json({
@@ -123,6 +129,43 @@ export const GetPosts = async (
   }
 }
 
+export const GetPostBySlug = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const user = req.user
+    if (!user) {
+      return res.status(401).json({
+        error: "Access denied: Token not provided or token is invalid",
+      })
+    }
+    const { postSlug } = req.params
+    if (!postSlug) {
+      return res.status(400).json({
+        error: "Provide a valid Post Slug",
+      })
+    }
+    
+    const post = await prisma.post.findFirst({
+      where: { slug: postSlug },
+      include: {
+        likes: true,
+        comments: true
+      }
+    })
+
+    return res.status(200).json({
+      message: "Post Fetched successfully",
+      post: post,
+    })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    console.error("Error fetching post:", err)
+    return res.status(500).json({ error: message })
+  }
+}
+
 export const GetPostById = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -135,7 +178,7 @@ export const GetPostById = async (
       })
     }
     const { postId } = req.params
-    if (postId) {
+    if (!postId) {
       return res.status(400).json({
         error: "Provide a valid Post id",
       })
@@ -144,6 +187,10 @@ export const GetPostById = async (
       where: {
         id: postId,
       },
+      include: {
+        likes: true,
+        comments: true
+      }
     })
     return res.status(200).json({
       message: "Post Fetched successfully",
@@ -152,6 +199,80 @@ export const GetPostById = async (
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error"
     console.error("Error fetching posts:", err)
+    return res.status(500).json({ error: message })
+  }
+}
+
+export const UpdateById = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const user = req.user
+    if (!user) {
+      return res.status(401).json({
+        error: "Access denied: Token not provided or token is invalid",
+      })
+    }
+    const { postId } = req.params
+    if (!postId) {
+      return res.status(400).json({
+        error: "Provide a valid Post id",
+      })
+    }
+    const existingPost = await prisma.post.findUnique({
+      where: { id: postId },
+    })
+
+    if (!existingPost) {
+      return res.status(400).json({
+        error: "Post with this post id doesn't exist",
+      })
+    }
+    const parsed = updateSchema.safeParse(req.body)
+    if (parsed.error) {
+      return res.status(400).json({
+        message: "All fields are required",
+        error: z.treeifyError(parsed.error),
+      })
+    }
+
+    const { title, content, isPublished, status } = parsed.data
+    let {slug} = parsed.data
+    if (slug !== undefined) {
+      const trimmedSlug = normalizeSlug(slug)
+      const existingSlug = await prisma.post.findUnique({
+        where: {
+          slug: trimmedSlug,
+        },
+      })
+      if (existingSlug) {
+        return res.status(409).json({
+          error: "This Slug is already in use",
+        })
+      }
+    }
+    if(!slug?.startsWith(`${user.username}-`)){      
+      slug = user.username + "-" + slug
+    }
+    const updatedPost = await prisma.post.update({
+      where: { id: postId },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(isPublished !== undefined && { isPublished }),
+        ...(status !== undefined && { status }),
+        ...(slug !== undefined && { slug }),
+      },
+    })
+
+    return res.status(200).json({
+      message: "Post updated successfully",
+      post: updatedPost,
+    })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    console.error("Error updating posts:", err)
     return res.status(500).json({ error: message })
   }
 }
@@ -168,20 +289,32 @@ export const DeletePostById = async (
       })
     }
     const { postId } = req.params
-    if (postId) {
+    if (!postId) {
       return res.status(400).json({
         error: "Provide a valid Post id",
       })
     }
+    const existingPost = await prisma.post.findUnique({
+      where: { id: postId },
+    })
+
+    if (!existingPost) {
+      return res.status(400).json({
+        error: "Post with this post id doesn't exist",
+      })
+    }
+
     await prisma.post.delete({
       where: {
         id: postId,
       },
     })
-    return res.status(409)
+    return res.status(409).json({
+      message: "Post deleted successfully"
+    })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error"
-    console.error("Error fetching posts:", err)
+    console.error("Error deleting posts:", err)
     return res.status(500).json({ error: message })
   }
 }

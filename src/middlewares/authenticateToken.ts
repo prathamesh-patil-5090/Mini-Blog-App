@@ -2,7 +2,7 @@ import type { NextFunction, Response } from "express"
 import { AuthenticatedRequest } from "../types/AuthenticatedRequest"
 import { verifyAccessToken } from "../utils/jwt"
 
-const authenticateToken = async (
+export const authenticateToken = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
@@ -12,17 +12,17 @@ const authenticateToken = async (
     res.status(401).json({
       error: "Access Denied: Token was not provided",
     })
-    try {
-      const user = await verifyAccessToken(accessToken)
-      req.user = user
-      next()
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        res.status(401).json({
-          error: "Access Denied: Invalid or expired token",
-        })
-      }
-      return
+  }
+  try {
+    const user = await verifyAccessToken(accessToken)
+    req.user = user
+    next()
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      res.status(401).json({
+        error: "Access Denied: Invalid or expired token",
+      })
     }
+    return
   }
 }

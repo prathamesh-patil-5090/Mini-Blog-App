@@ -234,6 +234,7 @@ export const verifyAccessToken = async (
     : accessToken
 
   const { payload } = await jwtVerify(rawToken, secretKey)
+  console.log(payload)
   return {
     id: payload.id as string,
     name: payload.name as string,
