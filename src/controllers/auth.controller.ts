@@ -68,6 +68,34 @@ const clearAuthCookies = (res: Response) => {
 // -----------------------------
 // Register User
 // -----------------------------
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Register'
+ *     responses:
+ *       '201':
+ *         description: User created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 accessToken:
+ *                   type: string
+ */
 export const RegisterUser = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -131,6 +159,7 @@ export const RegisterUser = async (
     return res.status(201).json({
       message: "User created successfully",
       user: userWithoutPassword,
+      accessToken,
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error"
@@ -142,6 +171,34 @@ export const RegisterUser = async (
 // -----------------------------
 // Login User
 // -----------------------------
+/**
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Login a user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Login'
+ *     responses:
+ *       '200':
+ *         description: Logged in
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 accessToken:
+ *                   type: string
+ */
 export const loginUser = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -201,6 +258,7 @@ export const loginUser = async (
     return res.status(200).json({
       message: "User logged in successfully",
       user: userWithoutPassword,
+      accessToken,
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error"
@@ -212,6 +270,17 @@ export const loginUser = async (
 // -----------------------------
 // Logout User
 // -----------------------------
+/**
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Logout a user (blacklist refresh token)
+ *     responses:
+ *       '200':
+ *         description: Logged out
+ */
 export const logOut = async (
   req: Request,
   res: Response,
@@ -249,6 +318,17 @@ export const logOut = async (
 // -----------------------------
 // Logout All Devices
 // -----------------------------
+/**
+ * @openapi
+ * /api/auth/logoutAll:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Invalidate all sessions for current user
+ *     responses:
+ *       '200':
+ *         description: Logged out from all devices
+ */
 export const logOutAllDevices = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -280,6 +360,21 @@ export const logOutAllDevices = async (
 // -----------------------------
 // Refresh Token
 // -----------------------------
+/**
+ * @openapi
+ * /api/auth/refresh:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Refresh access token
+ *     responses:
+ *       '200':
+ *         description: Tokens refreshed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TokenResponse'
+ */
 export const RefreshTokenController = async (
   req: Request,
   res: Response,
@@ -308,6 +403,7 @@ export const RefreshTokenController = async (
 
     return res.status(200).json({
       message: "Tokens refreshed successfully",
+      accessToken: newAccessToken,
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Invalid refresh token"

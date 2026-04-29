@@ -85,6 +85,41 @@ export const CreatePost = async (
   }
 }
 
+/**
+ * @openapi
+ * /api/post/create:
+ *   post:
+ *     tags:
+ *       - Post
+ *     summary: Create a new post
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreatePostRequest'
+ *           example:
+ *             title: A Day in the Life of a Developer
+ *             content: Today I learned how to wire Swagger examples into my API.
+ *             slug: a-day-in-the-life-of-a-developer
+ *             isPublished: true
+ *             status: PUBLISHED
+ *     responses:
+ *       '201':
+ *         description: Post created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 post:
+ *                   $ref: '#/components/schemas/Post'
+ */
+
 export const GetPosts = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -129,6 +164,20 @@ export const GetPosts = async (
   }
 }
 
+/**
+ * @openapi
+ * /api/post:
+ *   get:
+ *     tags:
+ *       - Post
+ *     summary: Get posts for authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: List of posts
+ */
+
 export const GetPostBySlug = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -166,6 +215,24 @@ export const GetPostBySlug = async (
   }
 }
 
+/**
+ * @openapi
+ * /api/post/slug/{postSlug}:
+ *   get:
+ *     tags:
+ *       - Post
+ *     summary: Get a post by slug
+ *     parameters:
+ *       - in: path
+ *         name: postSlug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Post fetched
+ */
+
 export const GetPostById = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -202,6 +269,26 @@ export const GetPostById = async (
     return res.status(500).json({ error: message })
   }
 }
+
+/**
+ * @openapi
+ * /api/post/{postId}:
+ *   get:
+ *     tags:
+ *       - Post
+ *     summary: Get a post by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Post fetched
+ */
 
 export const UpdateById = async (
   req: AuthenticatedRequest,
@@ -277,6 +364,38 @@ export const UpdateById = async (
   }
 }
 
+/**
+ * @openapi
+ * /api/post/{postId}:
+ *   put:
+ *     tags:
+ *       - Post
+ *     summary: Update a post by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdatePostRequest'
+ *           example:
+ *             title: Updated Post Title
+ *             content: Updated content for the post.
+ *             slug: updated-post-title
+ *             isPublished: false
+ *             status: DRAFT
+ *     responses:
+ *       '200':
+ *         description: Post updated
+ */
+
 export const DeletePostById = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -318,3 +437,23 @@ export const DeletePostById = async (
     return res.status(500).json({ error: message })
   }
 }
+
+/**
+ * @openapi
+ * /api/post/{postId}:
+ *   delete:
+ *     tags:
+ *       - Post
+ *     summary: Delete a post by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Post deleted
+ */

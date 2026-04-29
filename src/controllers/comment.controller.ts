@@ -78,6 +78,35 @@ export const CreateComment = async (
   }
 }
 
+/**
+ * @openapi
+ * /api/comment/{postId}:
+ *   post:
+ *     tags:
+ *       - Comment
+ *     summary: Create a comment on a post
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       '201':
+ *         description: Comment created
+ */
+
 export const GetCommentsForPost = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -141,6 +170,26 @@ export const GetCommentsForPost = async (
     return res.status(500).json({ error: message })
   }
 }
+
+/**
+ * @openapi
+ * /api/comment/{postId}:
+ *   get:
+ *     tags:
+ *       - Comment
+ *     summary: Get comments for a post
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Comments fetched
+ */
 
 export const UpdateComment = async (
   req: AuthenticatedRequest,
@@ -215,6 +264,35 @@ export const UpdateComment = async (
   }
 }
 
+/**
+ * @openapi
+ * /api/comment/{commentId}:
+ *   put:
+ *     tags:
+ *       - Comment
+ *     summary: Update a comment
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Comment updated
+ */
+
 export const DeleteComment = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -262,3 +340,23 @@ export const DeleteComment = async (
     return res.status(500).json({ error: message })
   }
 }
+
+/**
+ * @openapi
+ * /api/comment/{commentId}:
+ *   delete:
+ *     tags:
+ *       - Comment
+ *     summary: Delete a comment
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Comment deleted
+ */

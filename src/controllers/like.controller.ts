@@ -44,6 +44,26 @@ export const LikePost = async (
   }
 }
 
+/**
+ * @openapi
+ * /api/like/{postId}:
+ *   post:
+ *     tags:
+ *       - Like
+ *     summary: Like a post
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '201':
+ *         description: Liked
+ */
+
 export const UnLikePost = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -84,3 +104,23 @@ export const UnLikePost = async (
     return res.status(500).json({ error: message })
   }
 }
+
+/**
+ * @openapi
+ * /api/like/{likeId}:
+ *   delete:
+ *     tags:
+ *       - Like
+ *     summary: Unlike (delete like)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: likeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Unliked
+ */
