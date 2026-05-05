@@ -21,10 +21,16 @@ const getIp = (req: Request): string => {
   )
 }
 
-const blacklistToken = async (refreshToken: string) => {
-  await prisma.blacklistedTokens.create({
-    data: {
+export const blacklistRefreshToken = async (refreshToken: string) => {
+  const decoded = decodeJwt(refreshToken) as { exp?: number }
+  const expiresAt = decoded.exp ? new Date(decoded.exp * 1000) : undefined
+
+  await prisma.blacklistedTokens.upsert({
+    where: { refreshToken },
+    update: { expiresAt },
+    create: {
       refreshToken,
+      expiresAt,
     },
   })
 }
@@ -212,7 +218,7 @@ export const generateNewRefreshToken = async (
   }
 
   // Blacklist the old refresh token
-  await blacklistToken(oldRefreshToken)
+  await blacklistRefreshToken(oldRefreshToken)
 
   return new SignJWT(newPayload)
     .setProtectedHeader({ alg: "HS256" })
@@ -304,7 +310,7 @@ export const verifyRefreshToken = async (
 
   // 3) Expired refresh token?
   if (isExpired(verified.payload.exp)) {
-    await blacklistToken(refreshToken)
+    await blacklistRefreshToken(refreshToken)
     throw new Error("Refresh token expired")
   }
 
@@ -313,7 +319,7 @@ export const verifyRefreshToken = async (
     await validateTokenFamily(payload.tokenFamilyId, payload.version)
   } catch (err) {
     // Token family validation failed - possible reuse attack
-    await blacklistToken(refreshToken)
+    await blacklistRefreshToken(refreshToken)
 
     // Invalidate all user tokens as a precaution
     await invalidateAllUserTokenFamilies(payload.id)
@@ -340,7 +346,7 @@ export const verifyRefreshToken = async (
       const accessDecoded = decodeJwt(rawAccess)
 
       if (!isExpired(accessDecoded.exp)) {
-        await blacklistToken(refreshToken)
+        await blacklistRefreshToken(refreshToken)
 
         await logSuspiciousActivity({
           userId: payload.id,

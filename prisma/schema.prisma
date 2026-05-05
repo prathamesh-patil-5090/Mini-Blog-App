@@ -38,7 +38,7 @@ model Post {
   status      Status    @default(DRAFT)
   comments    Comment[] @relation("PostComments")
   likes       Like[]    @relation("PostLikes")
-  }
+}
 
 model Comment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -62,9 +62,10 @@ model Like {
 }
 
 model BlacklistedTokens {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  refreshToken String   @unique
-  listedAt     DateTime @default(now())
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  refreshToken String    @unique
+  listedAt     DateTime  @default(now())
+  expiresAt    DateTime?
 }
 
 model SuspiciousActivity {

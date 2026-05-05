@@ -11,6 +11,7 @@ import {
   generateNewRefreshToken,
   invalidateAllUserSessions,
   verifyRefreshToken,
+  blacklistRefreshToken,
 } from "../utils/jwt"
 import { comparePassword, hashPassword } from "../utils/password"
 
@@ -61,8 +62,14 @@ const setAuthCookies = (
 }
 
 const clearAuthCookies = (res: Response) => {
-  res.clearCookie("accessToken")
-  res.clearCookie("refreshToken")
+  const cookieOptions = {
+    httpOnly: true,
+    secure: env.APP_STAGE === "production",
+    sameSite: "strict" as const,
+  }
+
+  res.clearCookie("accessToken", cookieOptions)
+  res.clearCookie("refreshToken", cookieOptions)
 }
 
 // -----------------------------
@@ -138,6 +145,8 @@ export const RegisterUser = async (
       throw new Error("Failed to create user")
     }
 
+    // Create token family for the user session
+    const tokenFamilyId = await createTokenFamily(newUser.id)
 
     // Create token payload
     const tokenPayload: JwtPayload = {
@@ -296,12 +305,8 @@ export const logOut = async (
       })
     }
 
-    // Blacklist the refresh token
-    await prisma.blacklistedTokens.create({
-      data: {
-        refreshToken,
-      },
-    })
+    // Blacklist the refresh token and clear cookies
+    await blacklistRefreshToken(refreshToken)
 
     clearAuthCookies(res)
 
