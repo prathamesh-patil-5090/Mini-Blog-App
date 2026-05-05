@@ -12,9 +12,9 @@ const cleanupBlacklistedTokens = async (): Promise<void> => {
       },
     });
     if (result.count === 0) {
-      console.log("No Blacklisted tokens were older than 30 days");
+      console.log("Cleaned up 0 blacklisted refresh tokens (none were older than 30 days)");
     } else {
-      console.log(`Cleaned up ${result.count} blacklisted refresh token`);
+      console.log(`Cleaned up ${result.count} blacklisted refresh tokens`);
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
