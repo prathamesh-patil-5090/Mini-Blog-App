@@ -7,12 +7,18 @@ export const authenticateToken = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  const accessToken: string = req.cookies.accessToken
+  const accessToken: string =
+    req.cookies?.accessToken ||
+    req.header("Authorization")?.replace("Bearer ", "") ||
+    ""
+
   if (!accessToken) {
     res.status(401).json({
       error: "Access Denied: Token was not provided",
     })
+    return
   }
+
   try {
     const user = await verifyAccessToken(accessToken)
     req.user = user

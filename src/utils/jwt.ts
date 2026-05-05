@@ -199,12 +199,6 @@ export const generateNewRefreshToken = async (
     throw new Error("Old refresh token is required for rotation")
   }
 
-  const decodedToken = decodeJwt(oldRefreshToken)
-
-  if (!isExpired(decodedToken.exp)) {
-    throw new Error("Refresh token not expired — rotation blocked")
-  }
-
   // Validate token family before creating new token
   await validateTokenFamily(payload.tokenFamilyId, payload.version)
 
@@ -240,8 +234,8 @@ export const verifyAccessToken = async (
     : accessToken
 
   const { payload } = await jwtVerify(rawToken, secretKey)
-  console.log(payload)
-  return {
+
+  const jwtPayload: JwtPayload = {
     id: payload.id as string,
     name: payload.name as string,
     email: payload.email as string,
@@ -249,6 +243,10 @@ export const verifyAccessToken = async (
     tokenFamilyId: payload.tokenFamilyId as string,
     version: payload.version as number,
   }
+
+  await validateTokenFamily(jwtPayload.tokenFamilyId, jwtPayload.version)
+
+  return jwtPayload
 }
 
 // -----------------------------
