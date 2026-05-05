@@ -131,30 +131,62 @@ export const GetPosts = async (
         error: "Access denied: Token not provided or token is invalid",
       })
     }
-    const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.limit as string) || 10
+
+    const querySchema = z.object({
+      page: z
+        .preprocess((value) => Number(value), z.number().int().positive())
+        .optional(),
+      limit: z
+        .preprocess((value) => Number(value), z.number().int().positive().max(100))
+        .optional(),
+      status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+    })
+
+    const parsedQuery = querySchema.safeParse(req.query)
+    if (!parsedQuery.success) {
+      return res.status(400).json({
+        error: "Invalid query parameters",
+        details: z.treeifyError(parsedQuery.error),
+      })
+    }
+
+    const page = parsedQuery.data.page ?? 1
+    const limit = parsedQuery.data.limit ?? 10
+    const status = parsedQuery.data.status
     const skip = (page - 1) * limit
+
+    const postFilter = {
+      authorId: user.id,
+      ...(status ? { status } : {}),
+    }
+
     const totalPosts = await prisma.post.count({
-      where: { authorId: user.id },
+      where: postFilter,
     })
 
     const userPosts = await prisma.post.findMany({
-      where: { authorId: user.id },
+      where: postFilter,
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
       include: {
         likes: true,
-        comments: true
-      }
+        comments: true,
+      },
     })
-    const totalPages = Math.ceil(totalPosts / limit)
+
+    const totalPages = limit > 0 ? Math.ceil(totalPosts / limit) : 0
+
     return res.status(200).json({
-      message: "Posts Fetched successfully",
-      page,
-      limit,
-      totalPosts,
-      totalPages,
+      message: "Posts fetched successfully",
+      meta: {
+        page,
+        limit,
+        totalPosts,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
       posts: userPosts,
     })
   } catch (err: unknown) {
